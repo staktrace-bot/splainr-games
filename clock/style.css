@@ -7,15 +7,15 @@ body {
   user-select: none; -webkit-user-select: none; overflow: hidden;
 }
 button, select { font: inherit; touch-action: manipulation; cursor: pointer; }
-#app { height: 100vh; height: 100dvh; display: flex; flex-direction: column; padding: env(safe-area-inset-top) 8px env(safe-area-inset-bottom); }
+#app { height: 100vh; height: 100svh; height: 100dvh; display: flex; flex-direction: column; padding: env(safe-area-inset-top) 8px env(safe-area-inset-bottom); }
 header { display: flex; align-items: center; gap: 8px; padding: 6px 4px; }
 .home { font-size: 26px; text-decoration: none; }
-#levelBadge { background: #6a4c93; color: #fff; border-radius: 999px; padding: 4px 12px; font-weight: 800; font-size: 18px; }
-#stars { flex: 1; display: flex; justify-content: center; gap: 4px; }
+#levelBadge { white-space: nowrap; background: #6a4c93; color: #fff; border-radius: 999px; padding: 4px 12px; font-weight: 800; font-size: 18px; }
+#stars { flex: 1; min-width: 0; display: flex; justify-content: center; gap: 4px; }
 .star { font-size: 30px; color: #d6d6d6; transition: transform .3s, color .3s; }
 .star.on { color: #ffb703; transform: scale(1.2); text-shadow: 0 0 6px #ffd166; }
 #mute { background: #fff; border: 2px solid #ccc; border-radius: 50%; width: 44px; height: 44px; font-size: 20px; }
-.screen { flex: 1; min-height: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; gap: 14px; }
+.screen { flex: 1; min-height: 0; overflow: hidden; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; gap: 14px; }
 .hidden { display: none !important; }
 h1 { margin: 0; font-size: clamp(32px, 8vw, 56px); color: #e63946; }
 .big { font-size: 24px; margin: 0; }
@@ -25,16 +25,16 @@ h1 { margin: 0; font-size: clamp(32px, 8vw, 56px); color: #e63946; }
 .party { font-size: 72px; animation: bounce 1s infinite; }
 @keyframes bounce { 50% { transform: translateY(-14px) scale(1.1); } }
 
-/* game */
-.board { width: 100%; height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: space-evenly; gap: 6px; }
-.visual { display: flex; flex-direction: column; align-items: center; gap: 4px; min-height: 0; flex: 1 1 auto; justify-content: center; }
-#clock { width: min(78vw, 40dvh); height: min(78vw, 40dvh); filter: drop-shadow(0 4px 6px rgba(0,0,0,.15)); }
-#game[data-level="2"] #clock { width: min(60vw, 26dvh); height: min(60vw, 26dvh); }
-#scene { position: relative; }
-#scene svg { height: 17dvh; max-width: 80vw; width: auto; aspect-ratio: 200/110; display: block; border-radius: 14px; border: 3px solid #fff; box-shadow: 0 2px 6px rgba(0,0,0,.2); }
-.scenelabel { font-weight: 800; font-size: 16px; }
-.answer { display: flex; flex-direction: column; align-items: center; gap: 6px; width: 100%; max-width: 400px; }
-.prompt { font-size: 20px; font-weight: 700; }
+/* game: everything stacks in normal flow; the clock takes whatever height is left */
+.board { width: 100%; height: 100%; min-height: 0; display: flex; flex-direction: column; align-items: center; justify-content: flex-start; gap: 6px; }
+.visual { flex: 1 1 0; min-height: 0; width: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; }
+/* the SVG box fills the remaining space; viewBox keeps the face round and centred inside it */
+#clock { flex: 1 1 0; min-height: 0; min-width: 0; width: 100%; max-width: 520px; height: auto; filter: drop-shadow(0 4px 6px rgba(0,0,0,.15)); }
+#scene { flex: 0 1 auto; min-height: 0; display: flex; flex-direction: column; align-items: center; }
+#scene svg { display: block; height: 13vh; height: 13dvh; width: auto; max-width: 80vw; aspect-ratio: 200/110; border-radius: 14px; border: 3px solid #fff; box-shadow: 0 2px 6px rgba(0,0,0,.2); }
+.scenelabel { font-weight: 800; font-size: 14px; }
+.answer { flex: 0 0 auto; display: flex; flex-direction: column; align-items: center; gap: 6px; width: 100%; max-width: 400px; }
+.prompt { font-size: 20px; font-weight: 700; line-height: 1.2; }
 .fields { display: flex; align-items: flex-start; gap: 6px; }
 .fieldwrap { display: flex; flex-direction: column; align-items: center; }
 .field { width: 88px; height: 62px; font-size: 40px; font-weight: 800; border-radius: 16px; border: 4px solid #bbb; background: #fff; color: #2b2d42; padding: 0; }
@@ -45,14 +45,14 @@ h1 { margin: 0; font-size: clamp(32px, 8vw, 56px); color: #e63946; }
 .flabel { font-size: 13px; color: #666; }
 .colon { font-size: 40px; font-weight: 800; line-height: 62px; }
 .ampm { display: flex; gap: 12px; }
-.ampm button { font-size: 22px; font-weight: 800; padding: 8px 18px; border-radius: 14px; border: 4px solid #bbb; background: #fff; min-height: 50px; }
+.ampm button { font-size: 22px; font-weight: 800; padding: 6px 18px; border-radius: 14px; border: 4px solid #bbb; background: #fff; min-height: 48px; }
 .ampm button.active { border-color: #ffb703; background: #fff3c4; }
 .keypad { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; width: min(92vw, 330px); }
-.keypad button { height: clamp(46px, 7.2dvh, 68px); font-size: 30px; font-weight: 800; border: 0; border-radius: 16px; background: #fff; box-shadow: 0 4px 0 #c9ced6; color: #2b2d42; }
+.keypad button { height: clamp(40px, 7vh, 64px); height: clamp(40px, 7dvh, 64px); font-size: 30px; font-weight: 800; border: 0; border-radius: 16px; background: #fff; box-shadow: 0 4px 0 #c9ced6; color: #2b2d42; }
 .keypad button:active { transform: translateY(3px); box-shadow: 0 1px 0 #c9ced6; }
 .keypad .ok { background: #8ac926; color: #fff; box-shadow: 0 4px 0 #5a8a14; }
 .keypad .del { background: #ffd6d6; }
-.feedback { min-height: 30px; font-size: 22px; font-weight: 800; }
+.feedback { min-height: 28px; font-size: 20px; font-weight: 800; line-height: 1.3; }
 .feedback.good { color: #2d8a2d; } .feedback.soft { color: #b5651d; }
 .nudge { animation: nudge .4s; }
 @keyframes nudge { 25% { transform: translateX(-6px); } 75% { transform: translateX(6px); } }
@@ -65,22 +65,38 @@ footer { text-align: center; padding: 2px 0 4px; }
 #confetti i { position: absolute; top: -20px; width: 12px; height: 18px; border-radius: 3px; animation: fall 2.4s ease-in forwards; }
 @keyframes fall { to { top: 110vh; transform: rotate(720deg); } }
 
-/* wide screens: clock left, answer right */
-@media (min-aspect-ratio: 1/1) and (min-width: 700px) {
-  .board { flex-direction: row; justify-content: center; gap: 5vw; }
-  .visual { flex: 0 1 auto; }
-  #clock { width: min(45vw, 62dvh); height: min(45vw, 62dvh); }
-  #game[data-level="2"] #clock { width: min(38vw, 46dvh); height: min(38vw, 46dvh); }
-  #scene svg { height: 24dvh; }
+/* portrait phones, level 2: picture beside the clock to save height */
+@media (max-aspect-ratio: 1/1) {
+  #game[data-level="2"] .visual { flex-direction: row; }
+  #game[data-level="2"] #scene { flex: 0 1 46%; }
+  #game[data-level="2"] #scene svg { width: 100%; height: auto; max-width: none; }
+  #game[data-level="2"] #clock { height: 100%; }
 }
-#clock, #scene svg { flex-shrink: 0; }
-@media (max-aspect-ratio: 1/1), (max-width: 699px) {
-  #scene svg { height: 13dvh; }
-  #game[data-level="2"] .keypad button { height: clamp(42px, 6.3dvh, 60px); }
-  #game[data-level="2"] .scenelabel { font-size: 14px; }
+/* landscape / wide: clock left, answer right */
+@media (min-aspect-ratio: 1/1) {
+  .board { flex-direction: row; justify-content: center; align-items: stretch; gap: 4vw; }
+  .visual { flex: 1 1 0; max-width: 60vw; }
+  .answer { justify-content: center; }
+  #scene svg { height: 22vh; height: 22dvh; }
 }
-@media (max-aspect-ratio: 1/1), (max-width: 699px) {
-  #game[data-level="2"] .visual { flex-direction: row; gap: 10px; }
-  #game[data-level="2"] #scene svg { height: auto; width: min(44vw, 30dvh); }
-  #game[data-level="2"] #clock { width: min(48vw, 30dvh); height: min(48vw, 30dvh); }
+/* short screens (small phones, in-app browsers, landscape phones) */
+@media (max-height: 700px) {
+  header { padding: 2px 4px; }
+  #mute { width: 38px; height: 38px; font-size: 17px; }
+  .star { font-size: 24px; }
+  .prompt { font-size: 17px; }
+  .field { width: 70px; height: 48px; font-size: 32px; border-width: 3px; }
+  .colon { font-size: 32px; line-height: 48px; }
+  .flabel { font-size: 11px; }
+  .answer { gap: 4px; }
+  .keypad { gap: 6px; }
+  .keypad button { height: clamp(36px, 6.4vh, 50px); height: clamp(36px, 6.4dvh, 50px); font-size: 24px; }
+  .ampm button { min-height: 38px; font-size: 18px; padding: 3px 14px; }
+  .feedback { min-height: 22px; font-size: 16px; }
+}
+@media (max-height: 450px) {
+  .keypad button { height: 34px; }
+  .field { height: 42px; font-size: 28px; } .colon { line-height: 42px; }
+  .feedback { min-height: 20px; }
+  footer { padding: 0; }
 }
