@@ -12,9 +12,9 @@ Play: https://staktrace-bot.github.io/splainr-games/
 
 Five levels; get 5 right in a row to move up:
 
-1. Hour hand only — what hour is it?
-2. Hour hand + a morning/afternoon/evening/night picture — hour and AM/PM
-3. Minute hand only — how many minutes?
+1. Hour hand on a number, minute hand at 12 — what hour is it?
+2. Same as 1, plus a morning/afternoon/evening/night picture — hour and AM/PM
+3. Both hands (hour hand faded) — how many minutes?
 4. Both hands, minutes in steps of 5
 5. Both hands, any minute
 

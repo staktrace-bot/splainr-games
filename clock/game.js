@@ -24,8 +24,10 @@
       el('line', { x1: 100 + r1 * Math.sin(a), y1: 100 - r1 * Math.cos(a), x2: 100 + r2 * Math.sin(a), y2: 100 - r2 * Math.cos(a),
         stroke: big ? '#444' : '#999', 'stroke-width': big ? 2.5 : 1.2, 'stroke-linecap': 'round' }, svg);
     }
-    if (p.showHour) hand(svg, p.hourAngle, 42, 9, '#e63946', 'hour-hand');
-    if (p.showMin) hand(svg, p.minuteAngle, 72, 5, '#1d70b8', 'minute-hand');
+    // level 3 asks only for minutes: hour hand is faded so the minute hand stands out
+    var l3 = p.level === 3;
+    if (p.showHour) hand(svg, p.hourAngle, 42, l3 ? 7 : 9, '#e63946', 'hour-hand', l3 ? 0.35 : 1);
+    if (p.showMin) hand(svg, p.minuteAngle, 72, l3 ? 6 : 5, '#1d70b8', 'minute-hand', 1);
     for (var n = 1; n <= 12; n++) {
       var an = n * 30 * Math.PI / 180, rr = 64;
       var t = el('text', { x: 100 + rr * Math.sin(an), y: 100 - rr * Math.cos(an), 'text-anchor': 'middle', 'dominant-baseline': 'central',
@@ -43,8 +45,8 @@
     }
     el('circle', { cx: 100, cy: 100, r: 7, fill: '#333' }, svg);
   }
-  function hand(svg, angle, len, w, color, id) {
-    var g = el('g', { id: id, transform: 'rotate(' + angle + ' 100 100)', 'data-angle': angle }, svg);
+  function hand(svg, angle, len, w, color, id, op) {
+    var g = el('g', { id: id, transform: 'rotate(' + angle + ' 100 100)', 'data-angle': angle, opacity: op }, svg);
     el('line', { x1: 100, y1: 112, x2: 100, y2: 100 - len, stroke: color, 'stroke-width': w, 'stroke-linecap': 'round' }, g);
     el('path', { d: 'M' + (100 - w) + ' ' + (100 - len + 6) + ' L100 ' + (100 - len - 6) + ' L' + (100 + w) + ' ' + (100 - len + 6) + ' Z', fill: color }, g);
   }

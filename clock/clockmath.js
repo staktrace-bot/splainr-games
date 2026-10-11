@@ -13,18 +13,18 @@
   ];
   function makePuzzle(level) {
     var p = { level: level };
-    if (level === 1) { p.h = randInt(1, 12); p.m = 0; p.showHour = true; p.showMin = false; }
+    if (level === 1) { p.h = randInt(1, 12); p.m = 0; p.showHour = p.showMin = true; }
     else if (level === 2) {
       var s = SCENES[randInt(0, SCENES.length - 1)];
       p.h = s.hours[randInt(0, s.hours.length - 1)]; p.m = 0; p.scene = s.scene; p.ampm = s.ampm;
-      p.showHour = true; p.showMin = false;
-    } else if (level === 3) { p.h = 12; p.m = randInt(0, 11) * 5; p.showHour = false; p.showMin = true; }
+      p.showHour = p.showMin = true;
+    } else if (level === 3) { p.h = randInt(1, 12); p.m = randInt(0, 11) * 5; p.showHour = p.showMin = true; }
     else if (level === 4) { p.h = randInt(1, 12); p.m = randInt(0, 11) * 5; p.showHour = p.showMin = true; }
     else { p.h = randInt(1, 12); p.m = randInt(0, 59); p.showHour = p.showMin = true; }
     // For hour-only levels the hour hand points exactly at the number.
-    p.hourAngle = (level <= 2) ? hourAngle(p.h, 0) : hourAngle(p.h, p.m);
+    p.hourAngle = hourAngle(p.h, p.m);
     p.minuteAngle = minuteAngle(p.m);
-    p.key = [p.h, p.m, p.scene || ''].join(':');
+    p.key = (level === 3 ? [p.m] : [p.h, p.m, p.scene || '']).join(':'); // level 3: never repeat the same minute
     return p;
   }
   function nextPuzzle(level, prevKey) {
