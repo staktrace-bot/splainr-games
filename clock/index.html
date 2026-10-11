@@ -1,0 +1,73 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Clock Time! – Splainr Games</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div id="app">
+  <header>
+    <a class="home" href="../" aria-label="All games">🏠</a>
+    <div id="levelBadge">Level 1</div>
+    <div id="stars" aria-label="streak"></div>
+    <button id="mute" aria-label="Sound on/off">🔊</button>
+  </header>
+
+  <section id="start" class="screen">
+    <h1>⏰ Clock Time!</h1>
+    <p class="big">Can you read the clock?</p>
+    <button id="play" class="btn-play">▶ Play</button>
+    <a class="video" href="https://staktrace-bot.github.io/explainer-videos/" target="_blank" rel="noopener">📺 Watch the clock video first</a>
+  </section>
+
+  <section id="game" class="screen hidden">
+    <div class="board">
+      <div class="visual">
+        <div id="scene" class="hidden"></div>
+        <svg id="clock" viewBox="0 0 200 200" role="img" aria-label="clock"></svg>
+      </div>
+      <div class="answer">
+        <div id="prompt" class="prompt"></div>
+        <div id="fields" class="fields"></div>
+        <div id="ampm" class="ampm hidden">
+          <button data-ampm="AM">☀️ AM</button><button data-ampm="PM">🌙 PM</button>
+        </div>
+        <div id="keypad" class="keypad"></div>
+        <div id="feedback" class="feedback" aria-live="polite"></div>
+      </div>
+    </div>
+  </section>
+
+  <section id="celebrate" class="screen hidden">
+    <div class="party">🎉⭐🎉</div>
+    <h1 id="celebrateText">Level done!</h1>
+    <button id="nextLevel" class="btn-play">Next ▶</button>
+  </section>
+
+  <section id="win" class="screen hidden">
+    <div class="party">🏆</div>
+    <h1>You can read clocks!</h1>
+    <p class="big">Super star! ⭐⭐⭐⭐⭐</p>
+    <button id="again" class="btn-play">Play again ↻</button>
+  </section>
+
+  <footer>
+    <label class="parents">Parents: level
+      <select id="levelPick">
+        <option value="1">1 · hour hand</option>
+        <option value="2">2 · AM / PM</option>
+        <option value="3">3 · minute hand</option>
+        <option value="4">4 · both, 5 min</option>
+        <option value="5">5 · both, any min</option>
+      </select>
+    </label>
+  </footer>
+</div>
+<div id="confetti"></div>
+<script src="clockmath.js"></script>
+<script src="sound.js"></script>
+<script src="game.js"></script>
+</body>
+</html>
