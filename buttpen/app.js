@@ -302,6 +302,55 @@
     });
   });
 
+  // Prepare a print-only <img> from a data URL, wait until it has loaded, then print.
+  // iOS Safari is flaky if you print a canvas directly, so we always go through an image.
+  function whenImageReady(img, url, cb) {
+    var once = false;
+    function done() {
+      if (once) return;
+      once = true;
+      img.onload = null;
+      img.onerror = null;
+      cb();
+    }
+    img.onload = function () {
+      if (img.decode) img.decode().then(done, done);
+      else done();
+    };
+    img.onerror = done;
+    img.src = url;
+    if (img.complete && img.naturalWidth) {
+      if (img.decode) img.decode().then(done, done);
+      else done();
+    }
+  }
+
+  function preparePrint(opts) {
+    return new Promise(function (resolve, reject) {
+      world.toPrintPNG(opts || { includeCharacter: true }, function (url) {
+        if (!url) { reject(new Error('Could not make a picture to print.')); return; }
+        var img = $('printImg');
+        whenImageReady(img, url, function () { resolve(url); });
+      });
+    });
+  }
+
+  function printDrawing() {
+    setStatus('Getting your picture ready to print…', 'info');
+    preparePrint({ includeCharacter: true }).then(function () {
+      requestAnimationFrame(function () {
+        requestAnimationFrame(function () {
+          window.print();
+          setStatus('Ready to print. Pick a printer, or cancel if you changed your mind.', 'ok');
+        });
+      });
+    }).catch(function () {
+      setStatus('I could not make a picture to print. Try saving the picture instead.', 'err');
+    });
+  }
+
+  $('print').addEventListener('click', printDrawing);
+
   // Quick-command REPL: runs immediately without clearing, can use recipes from the editor.
   function runQuick(src) {
     src = (src || '').trim();
@@ -400,6 +449,8 @@
   window.ButtPenApp = {
     world: world,
     animator: animator,
+    preparePrint: preparePrint,
+    printDrawing: printDrawing,
     runProgram: function (src, cb) {
       code.value = src;
       updateGutter();

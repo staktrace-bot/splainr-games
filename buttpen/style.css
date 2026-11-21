@@ -170,6 +170,7 @@ h1 {
 .actions button.btn-stop { background: #ffd166; color: #2b2d42; box-shadow: 0 3px 0 #d4a017; }
 .actions button.btn-clear { background: #ffd6d6; color: #2b2d42; box-shadow: 0 3px 0 #d18a8a; }
 .actions button.btn-save { background: #fff; color: #2b2d42; }
+.actions button.btn-print { background: #e8f4ff; color: #2b2d42; box-shadow: 0 3px 0 #8fb8d4; }
 .row {
   flex: 0 0 auto;
   display: flex; flex-wrap: wrap; gap: 6px; align-items: center;
@@ -214,6 +215,7 @@ h1 {
   #status { font-size: 13px; min-height: 18px; }
   .editor { min-height: 64px; }
   #helpers { gap: 4px; }
+  .wide-label { display: none; }
 }
 /* Short screens (small phones, in-app browsers) */
 @media (max-height: 720px) {
@@ -233,4 +235,69 @@ h1 {
 @media (max-height: 680px) {
   #stage { flex: 1 1 34%; }
   #panel { flex: 1 1 66%; }
+}
+
+/* Print: only the cropped drawing + a small caption, no UI chrome. */
+#printSheet {
+  position: absolute;
+  left: -10000px;
+  top: 0;
+  width: 10in;
+  pointer-events: none;
+}
+#printSheet figure { margin: 0; padding: 0; text-align: center; }
+#printImg { max-width: 100%; height: auto; display: block; margin: 0 auto; }
+#printSheet figcaption {
+  font-family: "Comic Sans MS", "Chalkboard SE", "Trebuchet MS", system-ui, sans-serif;
+  font-size: 14px; font-weight: 700; color: #555; margin-top: 10px;
+}
+
+@media print {
+  @page { size: landscape; margin: 12mm; }
+  html, body {
+    height: 100% !important;
+    overflow: hidden !important;
+    background: #fff !important;
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+  #app { display: none !important; }
+  #printSheet {
+    position: static;
+    left: auto;
+    top: auto;
+    width: 100%;
+    height: 100%;
+    min-height: 100vh;
+    pointer-events: auto;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  #printSheet figure {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    height: 100%;
+    max-width: 100%;
+    max-height: 100%;
+  }
+  #printImg {
+    /* Scale the cropped drawing up to fill the page, keep its aspect ratio. */
+    max-width: 100%;
+    max-height: calc(100vh - 40px);
+    width: auto;
+    height: calc(100vh - 40px);
+    object-fit: contain;
+    page-break-inside: avoid;
+    break-inside: avoid;
+  }
+  #printSheet figcaption {
+    color: #333;
+    font-size: 12pt;
+    margin-top: 8px;
+    flex: 0 0 auto;
+  }
 }

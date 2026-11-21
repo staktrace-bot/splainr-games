@@ -9,7 +9,7 @@ const { chromium } = require('/tmp/pw/node_modules/playwright');
 const http = require('http');
 const fs = require('fs');
 const path = require('path');
-const { spawn } = require('child_process');
+const { execFileSync } = require('child_process');
 
 const REPO = path.resolve(__dirname, '../..');
 const SHOT_DIR = path.resolve(__dirname, 'screenshots');
@@ -271,6 +271,72 @@ async function main() {
     await runProgram(page, flower);
     const shot = await page.screenshot({ fullPage: false });
     saveShot(shot, 'desktop-flower.png');
+    await context.close();
+  }
+
+  // ---- Print: only the drawing, with caption, no UI chrome ----
+  {
+    const { context, page } = await open('desktop');
+    check((await page.locator('#print').count()) === 1, 'Print button is on the page, next to Save picture');
+    await runProgram(page, square);
+    const dataUrl = await page.evaluate(() => window.ButtPenApp.preparePrint({ includeCharacter: true }));
+    check(typeof dataUrl === 'string' && dataUrl.indexOf('data:image/png') === 0, 'preparePrint returns a PNG data URL');
+    const loaded = await page.evaluate(() => {
+      var img = document.getElementById('printImg');
+      return !!(img && img.complete && img.naturalWidth > 10);
+    });
+    check(loaded, 'print <img> has loaded before print');
+
+    await page.emulateMedia({ media: 'print' });
+    const info = await page.evaluate(() => {
+      var app = document.getElementById('app');
+      var sheet = document.getElementById('printSheet');
+      var cap = document.querySelector('#printSheet figcaption');
+      var helpers = document.getElementById('helpers');
+      var code = document.getElementById('code');
+      return {
+        appDisplay: getComputedStyle(app).display,
+        sheetDisplay: getComputedStyle(sheet).display,
+        sheetPosition: getComputedStyle(sheet).position,
+        caption: cap && cap.textContent.trim(),
+        helpersDisplay: getComputedStyle(helpers).display,
+        codeDisplay: getComputedStyle(code).display,
+        bodyText: document.body.innerText.replace(/\s+/g, ' ').trim()
+      };
+    });
+    console.log('print media', JSON.stringify(info));
+    check(info.appDisplay === 'none', 'print media hides the app UI chrome');
+    check(info.caption === 'Made with ButtPen', 'print caption says Made with ButtPen');
+    check(info.bodyText.indexOf('Made with ButtPen') !== -1, 'print text includes the caption');
+    check(info.bodyText.indexOf('Forward') === -1, 'print text does not include helper buttons');
+    check(info.bodyText.indexOf('Quick command') === -1, 'print text does not include the editor chrome');
+
+    const printShot = await page.screenshot({ fullPage: true });
+    saveShot(printShot, 'print-emulate.png');
+
+    const pdfPath = path.join(SHOT_DIR, 'print-preview.pdf');
+    await page.pdf({
+      path: pdfPath,
+      landscape: true,
+      printBackground: true,
+      preferCSSPageSize: true
+    });
+    fs.copyFileSync(pdfPath, path.join(COPY_DIR, 'print-preview.pdf'));
+    console.log('wrote', pdfPath);
+
+    const prefix = path.join(SHOT_DIR, 'print-preview');
+    execFileSync('pdftoppm', ['-png', '-r', '150', '-singlefile', pdfPath, prefix]);
+    const pngPath = prefix + '.png';
+    if (!fs.existsSync(pngPath)) {
+      // some pdftoppm versions ignore -singlefile and write -1.png
+      const alt = prefix + '-1.png';
+      if (fs.existsSync(alt)) fs.renameSync(alt, pngPath);
+    }
+    check(fs.existsSync(pngPath), 'pdftoppm wrote a print-preview PNG');
+    if (fs.existsSync(pngPath)) {
+      fs.copyFileSync(pngPath, path.join(COPY_DIR, 'print-preview.png'));
+      console.log('wrote', pngPath);
+    }
     await context.close();
   }
 

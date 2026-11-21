@@ -34,7 +34,7 @@ Commands (case-insensitive):
 - `to square :size ... end` then `square 50` — reusable recipes, with `+ - * /` in numbers
 - `home`, `clear` / `cs`, `hide` / `show`
 
-Tap the helper buttons (including a prominent **Repeat** button) to insert commands, or type in the editor. There’s a one-line quick command box (Enter to run, ↑ for history), Run / Step / Stop / Clear, adjustable speed, example programs (square, star, flower, house), autosave, and a “Save picture” PNG download. Works on phones and laptops.
+Tap the helper buttons (including a prominent **Repeat** button) to insert commands, or type in the editor. There’s a one-line quick command box (Enter to run, ↑ for history), Run / Step / Stop / Clear, adjustable speed, example programs (square, star, flower, house), autosave, a “Save picture” PNG download, and a **Print** button that prints just the drawing (with the character and a small “Made with ButtPen” caption) on a landscape page. Works on phones and laptops.
 
 ## Development
 

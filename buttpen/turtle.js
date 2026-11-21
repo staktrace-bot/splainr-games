@@ -214,6 +214,128 @@
     img.src = url;
   };
 
+  // World-space box around the ink (and optional character), with padding.
+  TurtleWorld.prototype.contentBounds = function (includeCharacter) {
+    var minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+    function expand(x, y) {
+      minX = Math.min(minX, x); maxX = Math.max(maxX, x);
+      minY = Math.min(minY, y); maxY = Math.max(maxY, y);
+    }
+    var lines = this.lines || [];
+    for (var i = 0; i < lines.length; i++) {
+      var ln = lines[i];
+      expand(ln.x1, ln.y1); expand(ln.x2, ln.y2);
+    }
+    if (includeCharacter !== false && this.pose) {
+      // Tight box around the character: local SVG corners, rotated by heading.
+      var A = root.ButtPenAvatars.VIEW;
+      var sc = this.actorSize / A.w;
+      var rad = ((this.pose.heading % 360) + 360) % 360 * Math.PI / 180;
+      var c = Math.cos(rad), s = Math.sin(rad);
+      var corners = [
+        { lx: -A.penX * sc, ly: A.penY * sc },
+        { lx: (A.w - A.penX) * sc, ly: A.penY * sc },
+        { lx: -A.penX * sc, ly: -(A.h - A.penY) * sc },
+        { lx: (A.w - A.penX) * sc, ly: -(A.h - A.penY) * sc }
+      ];
+      for (var k = 0; k < corners.length; k++) {
+        var p = corners[k];
+        expand(this.pose.x + p.lx * c + p.ly * s, this.pose.y - p.lx * s + p.ly * c);
+      }
+    }
+    if (!isFinite(minX)) {
+      minX = -80; maxX = 80; minY = -80; maxY = 80;
+    }
+    var pad = 28;
+    minX -= pad; minY -= pad; maxX += pad; maxY += pad;
+    var w = maxX - minX, h = maxY - minY, minSize = 160;
+    if (w < minSize) { var dx = (minSize - w) / 2; minX -= dx; maxX += dx; }
+    if (h < minSize) { var dy = (minSize - h) / 2; minY -= dy; maxY += dy; }
+    return { minX: minX, minY: minY, maxX: maxX, maxY: maxY, w: maxX - minX, h: maxY - minY };
+  };
+
+  // High-res cropped picture for saving or printing. Character is included by default.
+  TurtleWorld.prototype.toPrintPNG = function (opts, cb) {
+    if (typeof opts === 'function') { cb = opts; opts = {}; }
+    opts = opts || {};
+    var includeCharacter = opts.includeCharacter !== false && this.pose && this.pose.visible !== false;
+    var self = this;
+    var b = this.contentBounds(includeCharacter);
+    var scale = 2;
+    var maxPx = 2400;
+    if (Math.max(b.w, b.h) * scale > maxPx) scale = maxPx / Math.max(b.w, b.h);
+    var out = document.createElement('canvas');
+    out.width = Math.max(1, Math.ceil(b.w * scale));
+    out.height = Math.max(1, Math.ceil(b.h * scale));
+    var ctx = out.getContext('2d');
+
+    function wx(x) { return (x - b.minX) * scale; }
+    function wy(y) { return (b.maxY - y) * scale; }
+
+    ctx.fillStyle = '#fffdf7';
+    ctx.fillRect(0, 0, out.width, out.height);
+    // light grid, same 20-unit paper as the stage
+    ctx.save();
+    ctx.strokeStyle = 'rgba(80, 140, 180, 0.13)';
+    ctx.lineWidth = Math.max(1, scale * 0.6);
+    ctx.beginPath();
+    var step = 20, gx, gy;
+    var startX = Math.floor(b.minX / step) * step;
+    var startY = Math.floor(b.minY / step) * step;
+    for (gx = startX; gx <= b.maxX + 0.01; gx += step) {
+      ctx.moveTo(wx(gx), 0); ctx.lineTo(wx(gx), out.height);
+    }
+    for (gy = startY; gy <= b.maxY + 0.01; gy += step) {
+      ctx.moveTo(0, wy(gy)); ctx.lineTo(out.width, wy(gy));
+    }
+    ctx.stroke();
+    ctx.restore();
+
+    for (var i = 0; i < this.lines.length; i++) {
+      var ln = this.lines[i];
+      ctx.save();
+      ctx.strokeStyle = ln.color;
+      ctx.lineWidth = ln.width * scale;
+      ctx.lineCap = 'round';
+      ctx.lineJoin = 'round';
+      ctx.beginPath();
+      ctx.moveTo(wx(ln.x1), wy(ln.y1));
+      ctx.lineTo(wx(ln.x2), wy(ln.y2));
+      ctx.stroke();
+      ctx.restore();
+    }
+
+    function finish(url) { cb(url); }
+
+    if (!includeCharacter) {
+      finish(out.toDataURL('image/png'));
+      return;
+    }
+    var svg = this.actor.querySelector('svg');
+    if (!svg) { finish(out.toDataURL('image/png')); return; }
+    var xml = new XMLSerializer().serializeToString(svg);
+    var blob = new Blob([xml], { type: 'image/svg+xml;charset=utf-8' });
+    var url = URL.createObjectURL(blob);
+    var img = new Image();
+    img.onload = function () {
+      var A = root.ButtPenAvatars.VIEW;
+      var charScale = (self.actorSize / A.w) * scale;
+      var rot = (self.pose.heading + (self.pose.wiggle || 0)) * Math.PI / 180;
+      ctx.save();
+      ctx.translate(wx(self.pose.x), wy(self.pose.y));
+      ctx.rotate(rot);
+      ctx.drawImage(img, -A.penX * charScale, -A.penY * charScale, A.w * charScale, A.h * charScale);
+      ctx.restore();
+      URL.revokeObjectURL(url);
+      finish(out.toDataURL('image/png'));
+    };
+    img.onerror = function () {
+      URL.revokeObjectURL(url);
+      finish(out.toDataURL('image/png'));
+    };
+    img.src = url;
+  };
+
   // ---- animation runner ----
   var SPEEDS = {
     slow: { move: 420, turn: 260, px: 0.55 },

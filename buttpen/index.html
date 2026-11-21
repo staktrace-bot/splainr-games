@@ -56,7 +56,8 @@
         <button type="button" class="btn-step" id="step">Step</button>
         <button type="button" class="btn-stop" id="stop">Stop</button>
         <button type="button" class="btn-clear" id="clear">Clear</button>
-        <button type="button" class="btn-save" id="download">Save picture</button>
+        <button type="button" class="btn-save" id="download" title="Save picture">Save <span class="wide-label">picture</span></button>
+        <button type="button" class="btn-print" id="print">Print</button>
       </div>
 
       <div class="row">
@@ -81,6 +82,12 @@
       <div id="status" role="status" aria-live="polite"></div>
     </div>
   </div>
+</div>
+<div id="printSheet" aria-hidden="true">
+  <figure>
+    <img id="printImg" alt="Your ButtPen drawing">
+    <figcaption>Made with ButtPen</figcaption>
+  </figure>
 </div>
 <script src="parser.js"></script>
 <script src="interpreter.js"></script>
