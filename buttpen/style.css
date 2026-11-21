@@ -1,0 +1,236 @@
+* { box-sizing: border-box; }
+html, body { margin: 0; height: 100%; }
+body {
+  font-family: "Comic Sans MS", "Chalkboard SE", "Trebuchet MS", system-ui, sans-serif;
+  background: linear-gradient(160deg, #e0f7ff, #fff3d6);
+  color: #2b2d42;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+  overflow: hidden;
+}
+button, select, input, textarea { font: inherit; touch-action: manipulation; }
+button, select { cursor: pointer; }
+#app {
+  height: 100vh; height: 100svh; height: 100dvh;
+  display: flex; flex-direction: column;
+  min-height: 0;
+  padding: env(safe-area-inset-top) 8px env(safe-area-inset-bottom);
+}
+header {
+  flex: 0 0 auto;
+  display: flex; align-items: center; gap: 8px;
+  padding: 6px 2px 4px;
+  min-width: 0;
+}
+.home { font-size: 26px; text-decoration: none; flex: 0 0 auto; }
+h1 {
+  margin: 0; font-size: clamp(22px, 5.5vw, 32px); color: #e63946;
+  white-space: nowrap; flex: 0 0 auto;
+}
+.tag {
+  display: none; color: #666; font-size: 13px; font-weight: 700;
+}
+#mute {
+  margin-left: auto;
+  background: #fff; border: 2px solid #ccc; border-radius: 50%;
+  width: 44px; height: 44px; font-size: 20px; flex: 0 0 auto;
+}
+
+/* Character picker */
+#picker {
+  display: flex; gap: 6px; align-items: center;
+  overflow-x: auto; overflow-y: hidden;
+  flex: 1 1 auto; min-width: 0;
+  padding: 2px 4px;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: thin;
+}
+#picker button {
+  flex: 0 0 auto;
+  width: 48px; height: 48px; padding: 3px;
+  border: 3px solid transparent; border-radius: 14px;
+  background: #fff; box-shadow: 0 2px 0 #c9ced6;
+}
+#picker button svg { width: 100%; height: 100%; display: block; }
+#picker button[aria-selected="true"] {
+  border-color: #ffb703; background: #fff3c4;
+  box-shadow: 0 0 0 3px #ffe8a3;
+}
+#picker button:active { transform: translateY(2px); box-shadow: none; }
+
+#workspace {
+  flex: 1 1 0; min-height: 0;
+  display: flex; flex-direction: column;
+  gap: 8px;
+}
+#stage {
+  flex: 1 1 38%;
+  min-height: 120px;
+  position: relative;
+  background: #fffdf7;
+  border-radius: 18px;
+  overflow: hidden;
+  box-shadow: 0 4px 0 #c9ced6;
+  border: 3px solid #fff;
+}
+#paper { display: block; width: 100%; height: 100%; }
+#actor {
+  position: absolute; left: 0; top: 0;
+  pointer-events: none;
+  will-change: transform;
+  transition: opacity .2s;
+}
+#actor svg { display: block; width: 100%; height: 100%; overflow: visible; }
+
+#panel {
+  flex: 1 1 55%;
+  min-height: 0;
+  display: flex; flex-direction: column;
+  gap: 6px;
+  overflow-x: hidden;
+  overflow-y: auto;
+}
+
+#helpers {
+  flex: 0 0 auto;
+  display: flex; flex-wrap: wrap; gap: 6px;
+  align-items: center;
+}
+#helpers button, .swatch {
+  min-height: 40px;
+  padding: 6px 10px;
+  border: 0; border-radius: 12px;
+  background: #fff;
+  box-shadow: 0 3px 0 #c9ced6;
+  font-weight: 800; font-size: 14px; color: #2b2d42;
+}
+#helpers button:active, .actions button:active, .swatch:active {
+  transform: translateY(2px); box-shadow: 0 1px 0 #c9ced6;
+}
+#helpers .btn-repeat {
+  background: #ffca3a; box-shadow: 0 3px 0 #d4a017;
+  font-size: 15px; padding: 6px 14px;
+}
+#helpers .btn-to { background: #d9c2f0; box-shadow: 0 3px 0 #9b7ab8; }
+.swatches { display: flex; gap: 4px; align-items: center; flex-wrap: wrap; }
+.swatch {
+  width: 32px; height: 32px; min-height: 32px; padding: 0;
+  border-radius: 50%; box-shadow: 0 2px 0 rgba(0,0,0,.2);
+  border: 2px solid #fff;
+}
+.swatch:active { transform: translateY(2px); }
+
+.editor {
+  flex: 1 1 0;
+  min-height: 72px;
+  display: flex;
+  background: #fff;
+  border-radius: 14px;
+  border: 3px solid #c9ced6;
+  overflow: hidden;
+  position: relative;
+}
+.editor.err {
+  border-color: #e63946;
+  box-shadow: 0 0 0 3px #ffd6d6;
+}
+#gutter {
+  margin: 0; flex: 0 0 2.4em;
+  background: #f3f1ea; color: #8a8a8a;
+  text-align: right; padding: 8px 6px;
+  font-family: ui-monospace, "Cascadia Mono", "Fira Code", Menlo, Consolas, monospace;
+  font-size: 13px; line-height: 1.45;
+  overflow: hidden; user-select: none;
+  white-space: pre;
+}
+#gutter .bad { background: #ffd6d6; color: #9b2226; font-weight: 800; border-radius: 4px; }
+#code {
+  flex: 1 1 auto; min-width: 0; min-height: 0;
+  border: 0; resize: none; padding: 8px 8px 8px 6px;
+  font-family: ui-monospace, "Cascadia Mono", "Fira Code", Menlo, Consolas, monospace;
+  font-size: 13px; line-height: 1.45;
+  background: transparent; color: #2b2d42;
+  outline: none; white-space: pre; overflow: auto;
+  tab-size: 2;
+}
+
+.actions {
+  flex: 0 0 auto;
+  display: flex; flex-wrap: wrap; gap: 6px; align-items: center;
+}
+.actions button, .actions select, .row select {
+  min-height: 42px;
+  border: 0; border-radius: 12px;
+  padding: 6px 12px;
+  font-weight: 800; font-size: 15px;
+  background: #fff; color: #2b2d42; box-shadow: 0 3px 0 #c9ced6;
+}
+.actions button.btn-run { background: #8ac926; color: #fff; box-shadow: 0 3px 0 #5a8a14; }
+.actions button.btn-step { background: #1982c4; color: #fff; box-shadow: 0 3px 0 #0f5a8a; }
+.actions button.btn-stop { background: #ffd166; color: #2b2d42; box-shadow: 0 3px 0 #d4a017; }
+.actions button.btn-clear { background: #ffd6d6; color: #2b2d42; box-shadow: 0 3px 0 #d18a8a; }
+.actions button.btn-save { background: #fff; color: #2b2d42; }
+.row {
+  flex: 0 0 auto;
+  display: flex; flex-wrap: wrap; gap: 6px; align-items: center;
+}
+.row label { font-size: 13px; font-weight: 700; color: #555; display: flex; align-items: center; gap: 4px; }
+
+#quick {
+  flex: 0 0 auto;
+  width: 100%; min-height: 42px;
+  border: 3px solid #c9ced6; border-radius: 12px;
+  padding: 6px 10px; background: #fff;
+  font-family: ui-monospace, "Cascadia Mono", Menlo, Consolas, monospace;
+  font-size: 14px;
+}
+#quick:focus { border-color: #ffb703; outline: none; box-shadow: 0 0 0 3px #ffe8a3; }
+
+#status {
+  flex: 0 0 auto;
+  min-height: 22px;
+  font-size: 15px; font-weight: 800;
+  line-height: 1.3;
+}
+#status.ok { color: #2d8a2d; }
+#status.err { color: #9b2226; }
+#status.info { color: #4267ac; }
+
+/* Desktop / laptop: side by side */
+@media (min-width: 850px) {
+  h1 { font-size: 32px; }
+  .tag { display: inline; margin-left: 2px; }
+  #workspace { flex-direction: row; align-items: stretch; gap: 12px; }
+  #stage { flex: 1 1 58%; min-height: 0; }
+  #panel { flex: 0 1 42%; max-width: 520px; }
+  #helpers button { font-size: 15px; min-height: 42px; }
+  #code, #gutter { font-size: 14px; }
+}
+/* Narrow phones: keep helper/action rows compact so Run + status stay on screen */
+@media (max-width: 500px) {
+  #helpers button { min-height: 36px; font-size: 13px; padding: 4px 8px; }
+  .swatch { width: 28px; height: 28px; min-height: 28px; }
+  .actions button, .actions select, .row select, #quick { min-height: 38px; font-size: 14px; padding: 5px 10px; }
+  #status { font-size: 13px; min-height: 18px; }
+  .editor { min-height: 64px; }
+  #helpers { gap: 4px; }
+}
+/* Short screens (small phones, in-app browsers) */
+@media (max-height: 720px) {
+  header { padding: 2px 2px 0; }
+  h1 { font-size: 22px; }
+  #mute { width: 38px; height: 38px; font-size: 17px; }
+  #picker button { width: 40px; height: 40px; }
+  #workspace { gap: 5px; }
+  #stage { min-height: 110px; }
+  #helpers { gap: 4px; }
+  #helpers button { min-height: 36px; font-size: 13px; padding: 4px 8px; }
+  .swatch { width: 28px; height: 28px; min-height: 28px; }
+  .actions button, .actions select, .row select, #quick { min-height: 38px; font-size: 14px; }
+  #status { font-size: 13px; min-height: 18px; }
+  .editor { min-height: 64px; }
+}
+@media (max-height: 680px) {
+  #stage { flex: 1 1 34%; }
+  #panel { flex: 1 1 66%; }
+}

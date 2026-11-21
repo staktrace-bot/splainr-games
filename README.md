@@ -7,6 +7,7 @@ Play: https://staktrace-bot.github.io/splainr-games/
 | Game | Path | About |
 |------|------|-------|
 | ⏰ Clock Time! | [`/clock/`](clock/) | Learn to read an analogue clock (ages ~5–8). Follows on from the [how to read a clock video](https://staktrace-bot.github.io/explainer-videos/). |
+| 🖍️ ButtPen | [`/buttpen/`](buttpen/) | A kid-friendly Logo / turtle drawing sandbox. The character holds the pen in their butt and draws as they walk. |
 
 ## Clock Time!
 
@@ -20,9 +21,28 @@ Five levels; get 5 right in a row to move up:
 
 Parents can jump to a level with `?level=N` (1–5) or the small picker at the bottom. Sounds are synthesized with the Web Audio API; there is a mute button.
 
+## ButtPen
+
+A Logo-style drawing language with a silly twist: pick a character (turtle, puppy, kitty, bunny, dino, robot, or unicorn) who holds the crayon in their butt and draws as they walk. You can change the character at any time without losing the drawing.
+
+Commands (case-insensitive):
+
+- `forward 50` / `fd` / `go`, `back 50` / `bk`
+- `left` / `right` / `turn left 90` (degrees default to 90)
+- `pen up` / `pen down`, `color red` (or `colour`, or `#ff00aa`), `width 4`
+- `repeat 4 [ ... ]` — loops, including loops inside loops
+- `to square :size ... end` then `square 50` — reusable recipes, with `+ - * /` in numbers
+- `home`, `clear` / `cs`, `hide` / `show`
+
+Tap the helper buttons (including a prominent **Repeat** button) to insert commands, or type in the editor. There’s a one-line quick command box (Enter to run, ↑ for history), Run / Step / Stop / Clear, adjustable speed, example programs (square, star, flower, house), autosave, and a “Save picture” PNG download. Works on phones and laptops.
+
 ## Development
 
-Open any `index.html` in a browser, or run `python3 -m http.server`. Tests: `node clock/test/clockmath.test.js`.
+Open any `index.html` in a browser, or run `python3 -m http.server`. Tests:
+
+- `node clock/test/clockmath.test.js`
+- `node buttpen/test/parser.test.js && node buttpen/test/interpreter.test.js`
+- Playwright (optional): `node buttpen/test/visual.js` (serves the repo and checks layouts / drawings). Pass a URL to run against a live site: `node buttpen/test/visual.js https://staktrace-bot.github.io/splainr-games/buttpen/`
 
 ## Adding a game
 

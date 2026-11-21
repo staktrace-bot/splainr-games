@@ -1,0 +1,93 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>ButtPen – Splainr Games</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div id="app">
+  <header>
+    <a class="home" href="../" aria-label="All games">🏠</a>
+    <h1>ButtPen</h1>
+    <span class="tag">draw with your butt-pen!</span>
+    <div id="picker" role="listbox" aria-label="Choose a character"></div>
+    <button id="mute" aria-label="Sound on/off">🔊</button>
+  </header>
+
+  <div id="workspace">
+    <div id="stage">
+      <canvas id="paper"></canvas>
+      <div id="actor"></div>
+    </div>
+
+    <div id="panel">
+      <div id="helpers" aria-label="Insert a command">
+        <button type="button" data-ins="forward 50" data-sel="8,2">Forward</button>
+        <button type="button" data-ins="back 50" data-sel="5,2">Back</button>
+        <button type="button" data-ins="left 90" data-sel="5,2">Left</button>
+        <button type="button" data-ins="right 90" data-sel="6,2">Right</button>
+        <button type="button" data-ins="pen up">Pen up</button>
+        <button type="button" data-ins="pen down">Pen down</button>
+        <button type="button" class="btn-repeat" data-ins="repeat 4 [  ]" data-sel="11,0" title="Insert a repeat loop">Repeat</button>
+        <button type="button" class="btn-to" data-ins="to name&#10;  &#10;end" data-sel="3,4">to…end</button>
+        <button type="button" data-ins="width 4" data-sel="6,1">Width</button>
+        <span class="swatches" aria-label="Colors">
+          <button type="button" class="swatch" data-ins="color red" style="background:#e63946" title="red" aria-label="color red"></button>
+          <button type="button" class="swatch" data-ins="color orange" style="background:#ff924c" title="orange" aria-label="color orange"></button>
+          <button type="button" class="swatch" data-ins="color gold" style="background:#ffb703" title="gold" aria-label="color gold"></button>
+          <button type="button" class="swatch" data-ins="color green" style="background:#8ac926" title="green" aria-label="color green"></button>
+          <button type="button" class="swatch" data-ins="color blue" style="background:#1982c4" title="blue" aria-label="color blue"></button>
+          <button type="button" class="swatch" data-ins="color purple" style="background:#6a4c93" title="purple" aria-label="color purple"></button>
+          <button type="button" class="swatch" data-ins="color pink" style="background:#ff70a6" title="pink" aria-label="color pink"></button>
+          <button type="button" class="swatch" data-ins="color brown" style="background:#9c6644" title="brown" aria-label="color brown"></button>
+          <button type="button" class="swatch" data-ins="color black" style="background:#222" title="black" aria-label="color black"></button>
+        </span>
+      </div>
+
+      <div class="editor" id="editorWrap">
+        <pre id="gutter" aria-hidden="true">1</pre>
+        <textarea id="code" spellcheck="false" autocapitalize="off" autocomplete="off" autocorrect="off" aria-label="Program"></textarea>
+      </div>
+
+      <div class="actions">
+        <button type="button" class="btn-run" id="run">▶ Run</button>
+        <button type="button" class="btn-step" id="step">Step</button>
+        <button type="button" class="btn-stop" id="stop">Stop</button>
+        <button type="button" class="btn-clear" id="clear">Clear</button>
+        <button type="button" class="btn-save" id="download">Save picture</button>
+      </div>
+
+      <div class="row">
+        <label>Speed
+          <select id="speed" aria-label="Drawing speed">
+            <option value="slow">Slow</option>
+            <option value="medium" selected>Medium</option>
+            <option value="fast">Fast</option>
+            <option value="instant">Instant</option>
+          </select>
+        </label>
+        <label>Examples
+          <select id="examples" aria-label="Example programs">
+            <option value="">Pick one…</option>
+          </select>
+        </label>
+      </div>
+
+      <input id="quick" type="text" spellcheck="false" autocapitalize="off" autocomplete="off" autocorrect="off"
+        placeholder="Quick command — Enter to run, ↑ history" aria-label="Quick command">
+
+      <div id="status" role="status" aria-live="polite"></div>
+    </div>
+  </div>
+</div>
+<script src="parser.js"></script>
+<script src="interpreter.js"></script>
+<script src="avatars.js"></script>
+<script src="turtle.js"></script>
+<script src="sound.js"></script>
+<script src="examples.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
