@@ -236,7 +236,7 @@
     setStatus('Drawing…', 'info');
     if (window.Sound) Sound.start();
     animator.onDone = function () {
-      sessionTurtle = res.turtle;
+      sessionTurtle = worldPoseAsTurtle();
       setStatus('Done!', 'ok');
       if (window.Sound) Sound.done();
       runningFrom = null;
@@ -260,8 +260,8 @@
     }
     if (window.Sound) Sound.step();
     animator.stepOnce(function (more) {
+      sessionTurtle = worldPoseAsTurtle();
       if (!more) {
-        sessionTurtle = animator._final && animator._final.turtle;
         setStatus('All done!', 'ok');
         runningFrom = null;
         if (window.Sound) Sound.done();
@@ -352,9 +352,10 @@
   $('print').addEventListener('click', printDrawing);
 
   // Quick-command REPL: runs immediately without clearing, can use recipes from the editor.
+  // Continues from the character's current pose, pen, colour and width.
   function runQuick(src) {
     src = (src || '').trim();
-    if (!src) return;
+    if (!src) return Promise.resolve(null);
     if (history[history.length - 1] !== src) history.push(src);
     histIdx = history.length;
     animator.stop();
@@ -374,36 +375,34 @@
     if (!parsed.ok) {
       setStatus(parsed.error.message, 'err');
       if (window.Sound) Sound.error();
-      return;
+      return Promise.resolve({ ok: false, error: parsed.error });
     }
     var res = Interpreter.run(parsed.ast, {
-      turtle: sessionTurtle || worldPoseAsTurtle(),
+      turtle: worldPoseAsTurtle(),
       procedures: procs
     });
     if (!res.ok) {
       setStatus(res.error.message, 'err');
       if (window.Sound) Sound.error();
-      return;
+      return Promise.resolve({ ok: false, error: res.error });
     }
     lastProcs = Object.assign({}, lastProcs, res.procedures);
     animator.load(res);
     animator.setSpeed(speedSel.value);
     setStatus('…', 'info');
-    animator.onDone = function () {
-      sessionTurtle = res.turtle;
-      setStatus('OK!', 'ok');
-    };
-    // Don't clear — play these actions on top of the current drawing.
-    // The result.lines are only the new lines; world already has old ones.
-    animator.playAll();
+    return new Promise(function (resolve) {
+      animator.onDone = function () {
+        sessionTurtle = worldPoseAsTurtle();
+        setStatus('OK!', 'ok');
+        resolve({ ok: true, turtle: sessionTurtle, newLines: res.lines, lines: world.lines.slice() });
+      };
+      // Don't clear — play these actions on top of the current drawing.
+      animator.playAll();
+    });
   }
 
   function worldPoseAsTurtle() {
-    var t = (sessionTurtle && Object.assign({}, sessionTurtle)) || Interpreter.defaultTurtle();
-    t.x = world.pose.x; t.y = world.pose.y; t.heading = ((world.pose.heading % 360) + 360) % 360;
-    t.visible = world.pose.visible !== false;
-    t.color = world.color || t.color;
-    return t;
+    return world.getTurtle();
   }
 
   quick.addEventListener('keydown', function (e) {
@@ -459,13 +458,19 @@
       startFreshRun(res);
       animator.setSpeed(speedSel.value);
       animator.onDone = function () {
-        sessionTurtle = res.turtle;
+        sessionTurtle = worldPoseAsTurtle();
         setStatus('Done!', 'ok');
         if (cb) cb(res);
       };
       animator.playAll();
     },
     setSpeed: function (s) { speedSel.value = s; animator.setSpeed(s); },
-    chooseCharacter: chooseCharacter
+    chooseCharacter: chooseCharacter,
+    runQuick: runQuick,
+    getState: function () {
+      return { turtle: worldPoseAsTurtle(), lines: world.lines.map(function (ln) {
+        return { x1: ln.x1, y1: ln.y1, x2: ln.x2, y2: ln.y2, color: ln.color, width: ln.width };
+      }) };
+    }
   };
 })();

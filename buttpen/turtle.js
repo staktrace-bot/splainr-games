@@ -8,6 +8,8 @@
     this.lines = [];
     this.pose = { x: 0, y: 0, heading: 0, wiggle: 0, visible: true };
     this.color = '#1982c4';
+    this.width = 4;
+    this.penDown = true;
     this.characterId = 'turtle';
     this.actorSize = 72;
     this._idle = 0;
@@ -169,8 +171,25 @@
     this.clearDrawing();
     var t = turtle || root.ButtPenInterpreter.defaultTurtle();
     this.setColor(t.color);
+    this.width = t.width != null ? t.width : 4;
+    this.penDown = t.penDown !== false;
     this.setVisible(t.visible !== false);
     this.setPose(t.x, t.y, t.heading, 0);
+  };
+
+  TurtleWorld.prototype.setWidth = function (w) { this.width = w; };
+  TurtleWorld.prototype.setPen = function (down) { this.penDown = !!down; };
+
+  TurtleWorld.prototype.getTurtle = function () {
+    return {
+      x: this.pose.x,
+      y: this.pose.y,
+      heading: ((this.pose.heading % 360) + 360) % 360,
+      penDown: this.penDown !== false,
+      color: this.color,
+      width: this.width != null ? this.width : 4,
+      visible: this.pose.visible !== false
+    };
   };
 
   // Composite the paper + character onto a PNG data URL.
@@ -392,9 +411,12 @@
         if (self._final && self._final.turtle) {
           var t = self._final.turtle;
           self.world.setColor(t.color);
+          if (t.width != null) self.world.setWidth(t.width);
+          if (t.penDown != null) self.world.setPen(t.penDown);
           self.world.setVisible(t.visible !== false);
           self.world.setPose(t.x, t.y, t.heading, 0);
-          self.world.setLines(self._final.lines);
+          // Do not setLines(_final.lines): that list is only this run's strokes.
+          // Quick commands would wipe anything already on the page.
         }
         if (self.onDone) self.onDone(true);
         return;
@@ -418,6 +440,8 @@
       if (self.index >= self.queue.length && self._final && self._final.turtle) {
         var t = self._final.turtle;
         self.world.setColor(t.color);
+        if (t.width != null) self.world.setWidth(t.width);
+        if (t.penDown != null) self.world.setPen(t.penDown);
         self.world.setVisible(t.visible !== false);
         self.world.setPose(t.x, t.y, t.heading, 0);
       }
@@ -508,8 +532,8 @@
     }
 
     if (act.type === 'color') { world.setColor(act.color); done(); return; }
-    if (act.type === 'width') { done(); return; }
-    if (act.type === 'pen') { done(); return; }
+    if (act.type === 'width') { world.setWidth(act.width); done(); return; }
+    if (act.type === 'pen') { world.setPen(act.down); done(); return; }
     if (act.type === 'hide') { world.setVisible(false); done(); return; }
     if (act.type === 'show') { world.setVisible(true); done(); return; }
     if (act.type === 'clear') {

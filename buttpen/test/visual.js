@@ -89,6 +89,49 @@ async function runProgram(page, src) {
   return result;
 }
 
+async function getState(page) {
+  return page.evaluate(() => window.ButtPenApp.getState());
+}
+
+async function runQuick(page, src) {
+  const result = await page.evaluate(function (src) {
+    return window.ButtPenApp.runQuick(src);
+  }, src);
+  await page.waitForTimeout(50);
+  return result;
+}
+
+async function sampleWorld(page, x, y) {
+  return page.evaluate(function (pt) {
+    var world = window.ButtPenApp.world;
+    var s = world.worldToScreen(pt.x, pt.y);
+    var canvas = world.canvas;
+    var dpr = window.devicePixelRatio || 1;
+    var px = Math.round(s.x * dpr);
+    var py = Math.round(s.y * dpr);
+    var data = world.ctx.getImageData(px, py, 1, 1).data;
+    return { r: data[0], g: data[1], b: data[2], a: data[3], sx: s.x, sy: s.y, px: px, py: py };
+  }, { x: x, y: y });
+}
+
+// True if this canvas pixel looks like ink, not the cream graph paper.
+function isInk(px) {
+  if (!px || px.a < 200) return false;
+  // paper is #fffdf7 (~255,253,247); grid lines are very light blue-grey
+  var paperDist = Math.abs(px.r - 255) + Math.abs(px.g - 253) + Math.abs(px.b - 247);
+  var gridish = px.r > 200 && px.g > 210 && px.b > 210;
+  return paperDist > 80 && !gridish;
+}
+
+function lineStartsAt(lines, x, y, eps) {
+  eps = eps || 1e-6;
+  return lines.some(function (ln) {
+    return (Math.abs(ln.x1 - x) < eps && Math.abs(ln.y1 - y) < eps) ||
+           (Math.abs(ln.x2 - x) < eps && Math.abs(ln.y2 - y) < eps);
+  });
+}
+
+
 async function layoutReport(page) {
   return page.evaluate(function () {
     function box(el) {
@@ -338,6 +381,89 @@ async function main() {
       console.log('wrote', pngPath);
     }
     await context.close();
+  }
+
+  // ---- Regression: quick commands must add to the current drawing, not erase it ----
+  async function assertQuickAppends(sizeName, takeShots) {
+    const { context, page } = await open(sizeName);
+    await runProgram(page, square);
+    const before = await getState(page);
+    check(before.lines.length === 4, sizeName + ': square has 4 lines before quick commands (got ' + before.lines.length + ')');
+    const prev = { x: before.turtle.x, y: before.turtle.y, heading: before.turtle.heading };
+    check(Math.abs(prev.x) < 1e-6 && Math.abs(prev.y) < 1e-6, sizeName + ': after square, character is at the origin');
+
+    // A point on the right side of the square, not on the later quick-command strokes.
+    const rightSide = await sampleWorld(page, 80, 40);
+    const topSide = await sampleWorld(page, 40, 80);
+    console.log(sizeName, 'before pixels', JSON.stringify({ rightSide, topSide, prev }));
+    check(isInk(rightSide), sizeName + ': right side of the square is drawn before quick commands (got ' + JSON.stringify(rightSide) + ')');
+    check(isInk(topSide), sizeName + ': top side of the square is drawn before quick commands (got ' + JSON.stringify(topSide) + ')');
+
+    if (takeShots) {
+      const shot = await page.locator('#stage').screenshot();
+      saveShot(shot, 'quick-before.png');
+    }
+
+    const first = await runQuick(page, 'fd 50');
+    check(first && first.ok, sizeName + ': fd 50 quick command ran');
+    const mid = await getState(page);
+    check(mid.lines.length === 5, sizeName + ': after fd 50, drawing has 5 lines (square + new one), got ' + mid.lines.length);
+    check(lineStartsAt(mid.lines, prev.x, prev.y), sizeName + ': new line starts at the character\'s previous position (' + prev.x + ',' + prev.y + ')');
+    check(Math.abs(mid.turtle.x - prev.x) < 1e-6 && Math.abs(mid.turtle.y - 50) < 1e-6,
+      sizeName + ': after fd 50 the character is at (0, 50), got (' + mid.turtle.x + ', ' + mid.turtle.y + ')');
+
+    const second = await runQuick(page, 'rt 45 fd 30');
+    check(second && second.ok, sizeName + ': rt 45 fd 30 quick command ran');
+    const after = await getState(page);
+    check(after.lines.length === 6, sizeName + ': after both quick commands, drawing has 6 lines, got ' + after.lines.length);
+    check(lineStartsAt(after.lines, 0, 50), sizeName + ': second new line starts where fd 50 ended (0, 50)');
+
+    const rightAfter = await sampleWorld(page, 80, 40);
+    const topAfter = await sampleWorld(page, 40, 80);
+    console.log(sizeName, 'after pixels', JSON.stringify({ rightAfter, topAfter, turtle: after.turtle, lineCount: after.lines.length }));
+    check(isInk(rightAfter), sizeName + ': right side of the square is still there after quick commands (got ' + JSON.stringify(rightAfter) + ')');
+    check(isInk(topAfter), sizeName + ': top side of the square is still there after quick commands (got ' + JSON.stringify(topAfter) + ')');
+
+    if (takeShots) {
+      const shot = await page.locator('#stage').screenshot();
+      saveShot(shot, 'quick-after.png');
+    }
+
+    // Changing character, speed, example, resizing, Save and Print must not wipe the drawing.
+    const n = after.lines.length;
+    await page.evaluate(function () {
+      window.ButtPenApp.chooseCharacter('puppy');
+      window.ButtPenApp.setSpeed('fast');
+      var sel = document.getElementById('examples');
+      sel.value = 'star';
+      sel.dispatchEvent(new Event('change', { bubbles: true }));
+    });
+    await page.evaluate(function () { window.ButtPenApp.world.resize(); });
+    await page.evaluate(function () { return window.ButtPenApp.preparePrint({ includeCharacter: true }); });
+    await page.evaluate(function () {
+      return new Promise(function (resolve) { window.ButtPenApp.world.toPNG(function (url) { resolve(!!url); }); });
+    });
+    const still = await getState(page);
+    check(still.lines.length === n, sizeName + ': character/speed/example/resize/save/print left the ' + n + ' lines in place (got ' + still.lines.length + ')');
+    const rightStill = await sampleWorld(page, 80, 40);
+    check(isInk(rightStill), sizeName + ': square ink is still on the canvas after character/speed/example/resize/save/print');
+
+    await context.close();
+  }
+
+  await assertQuickAppends('desktop', true);
+  await assertQuickAppends('phone', false);
+
+  // Side-by-side before/after for the report
+  {
+    const before = path.join(COPY_DIR, 'quick-before.png');
+    const after = path.join(COPY_DIR, 'quick-after.png');
+    const out = path.join(COPY_DIR, 'quick-before-after.png');
+    if (fs.existsSync(before) && fs.existsSync(after)) {
+      execFileSync('python3', [path.join(__dirname, 'montage.py'), before, after, out]);
+      fs.copyFileSync(out, path.join(SHOT_DIR, 'quick-before-after.png'));
+      console.log('wrote', out);
+    }
   }
 
   await browser.close();
